@@ -1,0 +1,17 @@
+spring:
+  application:
+    name: Hotels-Service
+  server:
+    port: 8081
+  jpa:
+    hibernate:
+      ddl-auto: update
+    database-platform: org.hibernate.dialect.MySQLDialect
+  datasource:
+    url: jdbc:mysql://localhost:3306/service_hotel
+    username: root
+    password: 
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka
