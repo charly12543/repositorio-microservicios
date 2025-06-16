@@ -1,4 +1,4 @@
-package com.charlyCorporation.CitiesService.repository;
+package com.charlyCorporation.CitiesService.client;
 
 
 import com.charlyCorporation.CitiesService.dto.HotelsDTO;
@@ -13,6 +13,6 @@ public interface IHotelsClient {
 
 
     @GetMapping("/hotel/{id_ciudad}")
-    public List<HotelsDTO> findHotelsInACity(@PathVariable Long id_ciudad);
+    List<HotelsDTO> findHotelsInACity(@PathVariable Long id_ciudad);
 
 }

@@ -4,16 +4,18 @@ import com.charlyCorporation.CitiesService.dto.CitiesDTO;
 import com.charlyCorporation.CitiesService.dto.HotelsDTO;
 import com.charlyCorporation.CitiesService.model.Cities;
 import com.charlyCorporation.CitiesService.repository.ICitiesRepository;
-import com.charlyCorporation.CitiesService.repository.IHotelsClient;
+import com.charlyCorporation.CitiesService.client.IHotelsClient;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.retry.annotation.Retry;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
-public class CitiesService implements ICitiesService{
+public class CitiesServiceImp implements ICitiesService{
 
     @Autowired
     private ICitiesRepository repo;
@@ -25,25 +27,25 @@ public class CitiesService implements ICitiesService{
     @Override
     @CircuitBreaker(name="Hotels-service", fallbackMethod = "fallBackHotels")
     @Retry(name="Hoteles_service")
-    public CitiesDTO getCitiesAndHotels(Long id_ciudad) {
+    @Transactional
+    public Optional<CitiesDTO> getCitiesAndHotels(Long id_ciudad) {
 
-        Cities city = this.findById(id_ciudad);
+        Optional<Cities> city = this.findById(id_ciudad);
         List<HotelsDTO> dto = client.findHotelsInACity(id_ciudad);
 
         CitiesDTO c = new CitiesDTO();
-        c.setId_ciudad(city.getId_ciudad());
-        c.setNombre(city.getNombre());
-        c.setContinente(city.getContinente());
-        c.setPais(city.getPais());
-        c.setEstado(city.getEstado());
+        c.setId_ciudad(city.get().getId_ciudad());
+        c.setNombre(city.get().getNombre());
+        c.setContinente(city.get().getContinente());
+        c.setPais(city.get().getPais());
+        c.setEstado(city.get().getEstado());
         c.setListaHoteles(dto);
 
         //LLamada al metodo donde puede ocurrir la excetion
         //createException();
 
-        return c;
-    }
-
+        return Optional.of(c);
+}
     public CitiesDTO fallBackHotels(Throwable throwable){
        return new CitiesDTO(9999999L,
                 "fallido", "fallido","fallido","fallido",null);
@@ -55,63 +57,71 @@ public class CitiesService implements ICitiesService{
     
 
     @Override
-    public void saveCity(Cities city) {
-        repo.save(city);
+    @Transactional
+    public Cities saveCity(Cities city) {
+        Cities c = repo.save(city);
+        return c;
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<Cities> getAllCities() {
         List<Cities> lista = repo.findAll();
         return lista;
     }
 
     @Override
-    public Cities findById(Long id) {
-        Cities city = repo.findById(id).orElse(null);
+    @Transactional
+    public Optional<Cities> findById(Long id) {
+        Optional<Cities> city = repo.findById(id);
         return city;
     }
 
     @Override
-    public void deletCity(Long id) {
+    @Transactional
+    public void deleteCity(Long id) {
         repo.deleteById(id);
 
     }
 
     @Override
+    @Transactional
     public List<Cities> saveVariasCities(List<Cities> city) {
         List<Cities> listavarios = repo.saveAll(city);
         return listavarios;
     }
 
     @Override
-    public Cities getCitiesForNameAndCountry(String nombre, String pais) {
+    @Transactional(readOnly = true)
+    public Optional<Cities> getCitiesForNameAndCountry(String nombre, String pais) {
 
         List<Cities> lista1 = this.getAllCities();
         for(Cities c:lista1){
-            if (c.getNombre().equals(nombre)) {
-                if(c.getPais().equals(pais)){
-                    return c;
+            if (c.getNombre().equalsIgnoreCase(nombre)) {
+                if(c.getPais().equalsIgnoreCase(pais)){
+                    return Optional.of(c);
                 }
             }
         }
-        return null;
+        return Optional.empty();
     }
 
     @Override
-    public CitiesDTO getForName(String nombre, String pais) {
+    @Transactional(readOnly = true)
+    public Optional<CitiesDTO> getForName(String nombre, String pais) {
 
-        Cities c = this.getCitiesForNameAndCountry(nombre,pais);
-        List<HotelsDTO> l = client.findHotelsInACity(c.getId_ciudad());
+        Optional<Cities> c = this.getCitiesForNameAndCountry(nombre,pais);
+        List<HotelsDTO> l = client.findHotelsInACity(c.get().getId_ciudad());
 
         CitiesDTO dto = new CitiesDTO();
-        dto.setId_ciudad(c.getId_ciudad());
-        dto.setNombre(c.getNombre());
-        dto.setPais(c.getPais());
-        dto.setContinente(c.getContinente());
-        dto.setEstado(c.getEstado());
+        dto.setId_ciudad(c.get().getId_ciudad());
+        dto.setNombre(c.get().getNombre());
+        dto.setPais(c.get().getPais());
+        dto.setContinente(c.get().getContinente());
+        dto.setEstado(c.get().getEstado());
         dto.setListaHoteles(l);
 
-        return dto;
+        return Optional.ofNullable(dto);
     }
 
 

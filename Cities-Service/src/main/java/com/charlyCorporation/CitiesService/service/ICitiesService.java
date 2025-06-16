@@ -4,23 +4,18 @@ import com.charlyCorporation.CitiesService.dto.CitiesDTO;
 import com.charlyCorporation.CitiesService.model.Cities;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface ICitiesService {
 
-    public void saveCity (Cities city);
+     Cities saveCity (Cities city);
+     List<Cities> getAllCities();
+     Optional<Cities> findById(Long id);
+     void deleteCity(Long id);
 
-    public List<Cities> getAllCities();
-
-    public Cities findById(Long id);
-
-    public void deletCity(Long id);
-
-    public CitiesDTO getCitiesAndHotels(Long id_ciudad);
-
-    public List<Cities> saveVariasCities(List<Cities> city);
-    
-    public Cities getCitiesForNameAndCountry(String nombre, String pais);
-
-    public CitiesDTO getForName(String nombre, String pais);
+     Optional<CitiesDTO> getCitiesAndHotels(Long id_ciudad);
+     List<Cities> saveVariasCities(List<Cities> city);
+     Optional<Cities> getCitiesForNameAndCountry(String nombre, String pais);
+     Optional<CitiesDTO> getForName(String nombre, String pais);
 
 }
